@@ -1,7 +1,7 @@
 // Implements http://rosettacode.org/wiki/IBAN
 
 extern crate num;
-
+use std::num::One;
 use num::bigint::{BigInt, ToBigInt};
 
 #[cfg(not(test))]
@@ -17,48 +17,39 @@ fn main() {
 // See http://en.wikipedia.org/wiki/International_Bank_Account_Number#Validating_the_IBAN
 fn is_valid(iban: &str) -> bool {
     // Discard whitespace
-    let mut iban_chars: Vec<char> = iban.chars().filter(|c| !c.is_whitespace()).collect();
-
-    if iban_chars.len() < 2 {
-        return false;
-    }
+    let trimmed = iban.chars().filter(|c| !c.is_whitespace()).collect::<String>();
+    let iban = trimmed.as_slice();
 
     // Check length of the IBAN
-    match country_length(iban.slice_to(2)) {
-        Some(l) if l == iban_chars.len() => { }
-        _                                => return false
-    };
-
-    // Rearrange (first four characters go to the back)
-    for _ in range(0u, 4) {
-        let front = iban_chars.remove(0).unwrap();
-        iban_chars.push(front);
+    if iban.len() < 2 || country_length(iban.slice_to(2)) != Some(iban.len()) {
+        return false
     }
 
-    // Expand letters to digits
-    let iban_int = parse_digits(iban_chars);
+    // Rearrange (first four characters go to the back)
+    let rearranged = iban.slice_from(4).to_string().append(iban.slice_to(4));
 
-    // Check if the remainder is one
-    match iban_int {
-        Some(x) => x % 97u.to_bigint().unwrap() == 1u.to_bigint().unwrap(),
-        None    => false
+    // Expand letters to digits
+    match parse_digits(rearranged.as_slice()) {
+        // Check if the remainder is one
+        Some(x) => x % 97u.to_bigint().unwrap() == One::one(),
+        None => false
     }
 }
 
 // Returns a BigInt made from the digits and letters of the IBAN
-fn parse_digits(chars: Vec<char>) -> Option<BigInt> {
-    let mut vec = Vec::with_capacity(chars.len() + 10);
+fn parse_digits(s: &str) -> Option<BigInt> {
+    let mut ns = String::with_capacity(s.len() + 10);
 
     // Copy the digits to the vector and expand the letters to digits
     // We convert the characters to Ascii to be able to transform the vector in a String directly
-    for &c in chars.iter() {
+    for c in s.chars() {
         match c.to_digit(36) {
-            Some(d) => vec.extend(d.to_string().as_slice().chars().map(|c| c.to_ascii())),
-            None    => return None
+            Some(d) => ns.push_str(d.to_string().as_slice()),
+            None => return None
         };
     }
 
-    from_str(vec.into_string().as_slice())
+    from_str(ns.as_slice())
 }
 
 fn country_length(country_code: &str) -> Option<uint> {
@@ -126,7 +117,8 @@ fn country_length(country_code: &str) -> Option<uint> {
         ("TR", 26),
         ("AE", 23),
         ("GB", 22),
-        ("VG", 24)];
+        ("VG", 24)
+    ];
 
     countries.iter()
              .find(|&&(country, _)| country == country_code)
