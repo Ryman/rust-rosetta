@@ -1,8 +1,6 @@
 // Implements http://rosettacode.org/wiki/Happy_numbers
 
 use std::collections::treemap::TreeSet;
-#[cfg(not(test))]
-use std::iter::count;
 
 fn digits(mut n: uint) -> Vec<uint> {
     let mut ds = vec![];
@@ -35,23 +33,27 @@ fn is_happy(mut x: uint) -> bool {
 
 #[cfg(not(test))]
 fn main() {
+    use std::iter::count;
     // Print the first 8 happy numbers
-    let v: Vec<uint> = count(1u, 1)
-        .filter(|x| is_happy(*x))
-        .take(8)
-        .collect();
+    let v = count(1u, 1).filter(|x| is_happy(*x))
+                        .take(8)
+                        .collect::<Vec<uint>>();
     println!("{}", v)
 }
 
 #[test]
 fn test_digits() {
-    assert_eq!(digits(0), vec![0]);
-    assert_eq!(digits(1), vec![1]);
-    assert_eq!(digits(2), vec![2]);
-    assert_eq!(digits(10), vec![1, 0]);
-    assert_eq!(digits(11), vec![1, 1]);
-    assert_eq!(digits(101), vec![1, 0, 1]);
-    assert_eq!(digits(1000), vec![1, 0, 0, 0]);
+    fn t(n: uint, expected: &[uint]) {
+        assert_eq!(digits(n).as_slice(), expected);
+    }
+
+    t(0, [0]);
+    t(1, [1]);
+    t(2, [2]);
+    t(10, [1, 0]);
+    t(11, [1, 1]);
+    t(101, [1, 0, 1]);
+    t(1000, [1, 0, 0, 0]);
 }
 
 #[test]
