@@ -18,20 +18,28 @@ fn main() {
     println!("Encoded: {}", json.as_slice());
 
     // Decode json to contact
-    let json_str = "{\"name\":\"Alan\", \"city\":\"Tokyo\"}";
-    let contact: Contact = json::decode(json_str).unwrap();
+    let json_str = r#"{
+        "name": "Alan",
+        "city": "Tokyo"
+    }"#;
+    let contact = json::decode::<Contact>(json_str).unwrap();
     println!("Decoded: {}", contact);
 }
 
 #[test]
 fn test_coherence() {
+    use serialize::json::{decode, encode};
     let c = Contact { name: "John".to_string(), city: "Paris".to_string() };
-    assert!(json::decode::<Contact>(json::encode(&c).as_slice()).unwrap() == c);
+    assert_eq!(decode::<Contact>(encode(&c).as_slice()).unwrap(), c);
 }
 
 #[test]
 fn test_decode() {
-    let json_str = "{\"name\":\"Alan\", \"city\":\"Tokyo\"}";
-    let contact: Contact = json::decode(json_str).unwrap();
-    assert!(contact == Contact { name: "Alan".to_string(), city: "Tokyo".to_string() });
+    let json_str = r#"{
+        "name": "Alan",
+        "city": "Tokyo"
+    }"#;
+
+    let contact = json::decode::<Contact>(json_str).unwrap();
+    assert_eq!(contact, Contact { name: "Alan".to_string(), city: "Tokyo".to_string() });
 }
