@@ -9,7 +9,11 @@ struct MarkovRule {
 
 impl MarkovRule {
     fn new(pattern: String, replacement: String, stop: bool) -> MarkovRule {
-        MarkovRule {pattern: pattern, replacement: replacement, stop: stop}
+        MarkovRule {
+            pattern: pattern,
+            replacement: replacement,
+            stop: stop
+        }
     }
 }
 
@@ -21,48 +25,53 @@ struct MarkovAlgorithm {
 impl MarkovAlgorithm {
     // Parse an algorithm description to build a markov algorithm
     pub fn from_str(s: &str) -> Result<MarkovAlgorithm, String> {
-        let mut rules: Vec<MarkovRule> = vec!();
+        let mut rules = vec![];
+
         for line in s.lines()
-            .map(|l| l.trim()) // Ignore whitespace before and after
-            .filter(|l| l.char_len() > 0 && l.char_at(0) != '#') { // Ignore comments
+                     // Ignore whitespace before and after
+                     .map(|l| l.trim())
+                     // Ignore comments
+                     .filter(|l| l.char_len() > 0 && l.char_at(0) != '#') {
 
             // check for -> (must be preceded by whitespace)
             // invalid ruleset if absent
             // whitespace rules mean there's 2 possible variations: " ->" and "\t->"
             let arrow_pos = line.find_str(" ->").or_else(|| line.find_str("\t->"));
             match arrow_pos {
-                None => {
-                    // Ruleset is invalid
-                    return Err(format!("Invalid rule \"{}\"", line));
-                }
-                Some(arrow) => {
+                // Ruleset is invalid
+                None => return Err(format!("Invalid rule \"{}\"", line)),
+                Some(idx) => {
                     // extract pattern (trim trailing whitespace)
-                    let pattern = line.slice_to(arrow).trim_right();
+                    let pattern = line.slice_to(idx).trim_right();
 
                     // get the string after the arrow
                     // this adds 3 to skip the arrow itself
-                    let line_end = line.slice_from(arrow + 3).trim_left();
+                    let line_end = line.slice_from(idx + 3).trim_left();
 
                     // check for . (stop)
-                    let stop = (line_end.char_len() > 0) && (line_end.char_at(0) == '.');
+                    let stop = line_end.starts_with(".");
 
                     // extract replacement
-                    let replacement = if stop {line_end.slice_from(1)} else {line_end};
+                    let replacement = if stop {
+                        line_end.slice_from(1)
+                    } else {
+                        line_end
+                    };
 
                     // add to rules
                     let new_rule = MarkovRule::new(pattern.to_string(),
-                                            replacement.to_string(), stop);
+                                                   replacement.to_string(),
+                                                   stop);
                     rules.push(new_rule);
                 }
             }
         }
-        let rule_set = MarkovAlgorithm{rules: rules};
-        Ok(rule_set)
+
+        Ok(MarkovAlgorithm{ rules: rules })
     }
 
     // Transform a text string by applying the markov algorithm
     pub fn apply(&self, input: &str) -> String {
-
         // get a writable version of the input to work with
         let mut state = input.to_string();
 
@@ -73,31 +82,30 @@ impl MarkovAlgorithm {
         loop {
             // find the first rule that is applicable
             // (pattern string is in state)
-            let possible_rule = self.rules.iter().find(|rule|{
+            let possible_rule = self.rules.iter().find(|rule| {
                 state.as_slice().find_str(rule.pattern.as_slice()).is_some()
             });
 
             match possible_rule {
                 // stop if no rule found
-                None => { break; }
+                None => break,
+                // replace the first instance (only) of the pattern
+                // Note: cannot use str::replace as that replaces all instances
                 Some(rule) => {
-                    // replace the first instance (only) of the pattern
-                    // Note: cannot use str::replace as that replaces all instances
-
                     // unwrap is safe here as the code for finding a rule
                     // already established that the pattern is present
-                    let pos = state.as_slice().find_str(rule.pattern.as_slice()).unwrap();
+                    let pos = state.as_slice()
+                                   .find_str(rule.pattern.as_slice()).unwrap();
                     let width = rule.pattern.len();
 
-                    // string parts
-                    let left = state.as_slice().slice_to(pos).to_string();
-                    let right = state.as_slice().slice_from(pos + width).to_string();
-
                     // construct new string
-                    state = format!("{}{}{}", left, rule.replacement, right);
+                    state = format!("{}{}{}",
+                                    state.as_slice().slice_to(pos),
+                                    rule.replacement,
+                                    state.as_slice().slice_from(pos + width));
 
                     // stop if required
-                    if rule.stop { break; }
+                    if rule.stop { break }
                 }
             }
         }
