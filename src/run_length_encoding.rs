@@ -1,5 +1,5 @@
 // http://rosettacode.org/wiki/Run-length_encoding
-static INPUT: &'static str = "WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWBWWWWWWWWWWWWWW";
+static INPUT : &'static str = "WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWBWWWWWWWWWWWWWW";
 
 // Needed so look-and-say_sequence compiles cleanly, because it
 // uses this code as a library
@@ -21,12 +21,13 @@ pub fn encode(value: &str) -> String {
     if cur.is_none() { return ret }
 
     for chr in chars {
-        if cur == Some(chr) { count += 1 }
-        else {
-                ret.push_str(count.to_string().as_slice());
-                ret.push_char(cur.unwrap());
-                count=1u;
-                cur=Some(chr);
+        if cur == Some(chr) {
+            count += 1
+        } else {
+            ret.push_str(count.to_string().as_slice());
+            ret.push_char(cur.unwrap());
+            count = 1u;
+            cur = Some(chr);
         }
     }
     ret.push_str(count.to_string().as_slice());
@@ -35,24 +36,35 @@ pub fn encode(value: &str) -> String {
 }
 
 pub fn decode(value: &str) -> Result<String, String> {
+    let mut start = 0;
     let mut result = String::new();
     if value.is_empty() { return Ok(result) }
 
-    let mut start = 0;
-
     for (i, c) in value.char_indices() {
         if c.is_digit() { continue }
-        if i==start { return Err(format!("expected digit, found {}", c)) }
+        if i == start { return Err(format!("expected digit, found {}", c)) }
 
-        let ret_s = value.slice(start, i);
-        let ret : uint = from_str(ret_s).unwrap();
+        let count = value.slice(start, i);
+        match from_str::<uint>(count) {
+            Some(count) => {
+                for _ in range(0, count) {
+                    result.push_char(c);
+                }
 
-        let repeated = String::from_char(ret, c);
-        start = i + 1;
-
-        result.push_str(repeated.as_slice());
+                start = i + 1;
+            }
+            None => return Err(format!("Failed to parse integer: {}", count))
+        }
     }
+
     Ok(result)
+}
+
+#[test]
+fn test_failed_decode() {
+    let s = "34028236692093846346337460743176821145567654W";
+    // This number is too large for uint parsing.
+    assert!(decode(s).is_err());
 }
 
 #[test]
