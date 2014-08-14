@@ -1,7 +1,7 @@
 // http://rosettacode.org/wiki/String_concatenation
 
 fn add_world(x: String) -> String {
-    // world is a &'a[u8]
+    // world is a &'static str
     let world = " world";
     // The call append() does a vec.push(other) to x.
     // Note that this call implies a move, so we cannot do an in-place append
@@ -12,8 +12,8 @@ fn add_world(x: String) -> String {
 
 #[cfg(not(test))]
 fn main() {
-    // The call to_string() turns a &[u8] into a Vec<u8>.
-    // This is done because Vecs are growable but slices aren't.
+    // The call to_string() turns a &str into a String
+    // This is done because Strings are growable but str slices aren't.
     let hello = "hello".to_string();
     let hello_world = add_world(hello);
     println!("{}", hello_world);
