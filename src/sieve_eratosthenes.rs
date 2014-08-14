@@ -1,6 +1,6 @@
 // Implements http://rosettacode.org/wiki/Sieve_of_Eratosthenes
 
-use std::iter::{range_inclusive, range_step};
+use std::iter::{range_inclusive, range_step_inclusive};
 
 fn int_sqrt(n: uint) -> uint {
     (n as f64).sqrt() as uint
@@ -8,15 +8,13 @@ fn int_sqrt(n: uint) -> uint {
 
 // Return the prime numbers up to limit
 fn simple_sieve(limit: uint) -> Vec<uint> {
-    if limit < 2 {
-        return vec!();
-    }
+    if limit < 2 { return vec![] }
 
     let mut primes = Vec::from_elem(limit + 1, true);
 
     for prime in range_inclusive(2, int_sqrt(limit) + 1) {
         if primes[prime] {
-            for multiple in range_step(prime * prime, limit + 1, prime) {
+            for multiple in range_step_inclusive(prime * prime, limit, prime) {
                 *primes.get_mut(multiple) = false
             }
         }
@@ -33,5 +31,5 @@ fn main() {
 #[test]
 fn test_basic() {
     let primes = simple_sieve(30);
-    assert!(primes.as_slice() == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]);
+    assert_eq!(primes.as_slice(), &[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]);
 }
