@@ -2,13 +2,13 @@
 
 #[deriving(Show)]
 struct Stack<T> {
-    // We use a vector because of simplicity
+    // We use a vector for simplicity
     vec: Vec<T>
 }
 
 impl<T> Stack<T> {
     fn new() -> Stack<T> {
-        Stack { vec: Vec::new() }
+        Stack { vec: vec![] }
     }
 
     // Adds an element at the top of the stack
@@ -68,11 +68,11 @@ fn test_basic() {
     assert!(!stack.empty());
 
     // The element at the top is 9
-    assert!(stack.peek().unwrap() == &9);
+    assert_eq!(stack.peek(), Some(&9));
 
     // Remove one element
-    stack.pop();
+    assert_eq!(stack.pop(), Some(9));
 
     // The element at the top is now 8
-    assert!(stack.peek().unwrap() == &8);
+    assert_eq!(stack.peek(), Some(&8));
 }
