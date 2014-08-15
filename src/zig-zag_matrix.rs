@@ -10,8 +10,11 @@ struct SortIndex {
 }
 
 impl SortIndex {
-    fn new(x:uint, y:uint) -> SortIndex {
-        SortIndex{x:x, y:y}
+    fn new(x: uint, y: uint) -> SortIndex {
+        SortIndex {
+            x: x,
+            y: y,
+        }
     }
 }
 
@@ -43,14 +46,16 @@ impl Ord for SortIndex {
     }
 }
 
-fn zigzag(n:uint) -> Vec<Vec<uint>> {
-    let mut l:Vec<SortIndex> = range(0u, n*n).map(|i| SortIndex::new(i%n,i/n)).collect();
+fn zigzag(n: uint) -> Vec<Vec<uint>> {
+    let mut l = range(0u, n * n).map(|i| SortIndex::new(i % n, i / n))
+                                .collect::<Vec<SortIndex>>();
     l.sort();
 
-    let mut result : Vec<Vec<uint>> = Vec::from_elem(n, Vec::from_elem(n,0u));
-    for (i,&SortIndex{x,y}) in l.iter().enumerate() {
+    let mut result = Vec::from_elem(n, Vec::from_elem(n, 0));
+    for (i, &SortIndex{ x, y }) in l.iter().enumerate() {
         *result.get_mut(y).get_mut(x) = i
     }
+
     result
 }
 
@@ -61,10 +66,10 @@ fn main() {
 
 #[test]
 fn result() {
-   let exp =vec![vec![0,  1, 5, 6,14],
-                 vec![2,  4, 7,13,15],
-                 vec![3,  8,12,16,21],
-                 vec![9, 11,17,20,22],
-                 vec![10,18,19,23,24]];
+   let exp = vec![vec![0, 1, 5, 6, 14],
+                 vec![2, 4, 7, 13, 15],
+                 vec![3, 8, 12, 16, 21],
+                 vec![9, 11, 17, 20, 22],
+                 vec![10, 18, 19, 23, 24]];
     assert_eq!(zigzag(5), exp);
 }
