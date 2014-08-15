@@ -6,9 +6,7 @@
 // the file, the reader unit requests number of lines printed from the printer
 // unit, and then prints them.
 
-use std::io::File;
-use std::io::BufferedReader;
-use std::comm::{channel, Sender, Receiver};
+use std::io::{File, BufferedReader};
 
 static FILENAME: &'static str = "resources/input.txt";
 
@@ -17,7 +15,7 @@ enum Message {
     End
 }
 
-fn printer(i_snd: Sender<int>, msg_rcv: Receiver<Message>) {
+fn printer(i_snd: Sender<uint>, msg_rcv: Receiver<Message>) {
     let mut count = 0;
     loop {
         match msg_rcv.recv() {
@@ -25,17 +23,19 @@ fn printer(i_snd: Sender<int>, msg_rcv: Receiver<Message>) {
                 print!("{}", line);
                 count += 1;
             }
-            End => {break;}
+            End => break
         }
     }
+
     i_snd.send(count);
 }
 
-fn reader(msg_snd: Sender<Message>, i_rcv: Receiver<int>) {
+fn reader(msg_snd: Sender<Message>, i_rcv: Receiver<uint>) {
     let mut file = BufferedReader::new(File::open(&Path::new(FILENAME)));
-    for line in file.lines() {
-        msg_snd.send(Line(line.unwrap()));
+    for line in file.lines().map(|l| l.unwrap()) {
+        msg_snd.send(Line(line));
     }
+
     msg_snd.send(End);
     println!("Total Lines: {}", i_rcv.recv());
 }
